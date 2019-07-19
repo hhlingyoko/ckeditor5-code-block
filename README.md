@@ -1,6 +1,4 @@
-<<<<<<< HEAD
 CKEditor 5 Code-Block Feature
-========================================
 
 [![npm version](https://badge.fury.io/js/%40ckeditor%2Fckeditor5-block-quote.svg)](https://www.npmjs.com/package/@ckeditor/ckeditor5-block-quote)
 
@@ -51,9 +49,3 @@ Then
 npm run build
 ```
 
-
-
-=======
-# ckeditor5-code-block
-ckeditor5-code-block
->>>>>>> 7e02a14410d64bf3188c862b08102ca41fcdc4e0
