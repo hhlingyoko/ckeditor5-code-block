@@ -10,7 +10,8 @@
 import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
 
 import CodeBlockCommand from './codeblockcommand';
-
+import Widget from '@ckeditor/ckeditor5-widget/src/widget';
+import { toWidget, toWidgetEditable } from '@ckeditor/ckeditor5-widget/src/utils';
 /**
  * The code Block editing.
  *
@@ -30,17 +31,71 @@ export default class CodeBlockEditing extends Plugin {
 
 		schema.register( 'codeBlock', {
 			allowWhere: '$block',
+			isObject: true,
 			allowContentOf: '$root'
 		} );
+		schema.register( 'codeBlockInner', {
+			isLimit: true,
+			allowIn: 'codeBlock',
+			allowContentOf: '$block'
+		} );
+
+
 
 		// Disallow codeBlock in codeBlock.
 		schema.addChildCheck( ( ctx, childDef ) => {
-			if ( ctx.endsWith( 'codeBlock' ) && childDef.name == 'codeBlock' ) {
+			if ( ctx.endsWith( 'codeBlockInner' ) && childDef.name == 'codeBlock' ) {
 				return false;
 			}
 		} );
 
-		editor.conversion.elementToElement( { model: 'codeBlock', view: 'code' } );
+		// editor.conversion.elementToElement( { model: 'codeBlock', view: 'code' } );
+
+        editor.conversion.for( 'upcast' ).elementToElement( {
+            model: 'codeBlock',
+            view: {
+                name: 'pre',
+                classes: 'code-block'
+            }
+        } );
+        editor.conversion.for( 'dataDowncast' ).elementToElement( {
+            model: 'codeBlock',
+            view: {
+                name: 'pre',
+                classes: 'code-block'
+            }
+        } );
+        editor.conversion.for( 'editingDowncast' ).elementToElement( {
+            model: 'codeBlock',
+            view: ( modelElement, viewWriter ) => {
+                const pre = viewWriter.createContainerElement( 'pre', { class: 'code-block' } );
+
+                return toWidget( pre, viewWriter, { label: 'simple box widget' } );
+            }
+		} );
+
+        editor.conversion.for( 'upcast' ).elementToElement( {
+            model: 'codeBlockInner',
+            view: {
+                name: 'code',
+                classes: 'code-block-inner'
+            }
+        } );
+        editor.conversion.for( 'dataDowncast' ).elementToElement( {
+            model: 'codeBlockInner',
+            view: {
+                name: 'code',
+                classes: 'code-block-inner'
+            }
+        } );
+        editor.conversion.for( 'editingDowncast' ).elementToElement( {
+            model: 'codeBlockInner',
+            view: ( modelElement, viewWriter ) => {
+                const code = viewWriter.createContainerElement( 'code', { class: 'code-block-inner' } );
+
+                return toWidgetEditable( code, viewWriter, { label: 'simple box inner' } );
+            }
+        } );
 
 		// Postfixer which cleans incorrect model states connected with code blocks.
 		editor.model.document.registerPostFixer( writer => {

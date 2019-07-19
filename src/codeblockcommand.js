@@ -155,7 +155,10 @@ export default class CodeBlockCommand extends Command {
 			let quote = findQuote( groupRange.start );
 
 			if ( !quote ) {
+				const codeBlock =  writer.createElement( 'codeBlock' );
+				const codeBlockInner =  writer.createElement( 'codeBlockInner' );
 				quote = writer.createElement( 'codeBlock' );
+				quote = writer.createElement( 'codeBlockInner' );
 
 				writer.wrap( groupRange, quote );
 			}
