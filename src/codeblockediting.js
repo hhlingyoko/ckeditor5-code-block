@@ -100,8 +100,9 @@ export default class CodeBlockEditing extends Plugin {
 		// Postfixer which cleans incorrect model states connected with code blocks.
 		editor.model.document.registerPostFixer( writer => {
 			const changes = editor.model.document.differ.getChanges();
-
+			console.log('registerPostFixer')
 			for ( const entry of changes ) {
+				console.log(entry.type,'entry.type')
 				if ( entry.type == 'insert' ) {
 					const element = entry.position.nodeAfter;
 
@@ -118,10 +119,13 @@ export default class CodeBlockEditing extends Plugin {
 					} else if ( element.is( 'codeBlock' ) && !schema.checkChild( entry.position, element ) ) {
 						// Added a blockQuote in incorrect place - most likely inside another blockQuote. Unwrap it
 						// so the content inside is not lost.
+						console.log('unwrap123')
 						writer.unwrap( element );
 
 						return true;
 					} else if ( element.is( 'codeBlock' ) ) {
+						console.log('insert unwrap')
+
 						// Just added an element. Check its children to see if there are no nested blockQuotes somewhere inside.
 						const range = writer.createRangeIn( element );
 
@@ -135,13 +139,19 @@ export default class CodeBlockEditing extends Plugin {
 					}
 				} else if ( entry.type == 'remove' ) {
 					const parent = entry.position.parent;
-
+					console.log('parent isEmpty', parent)
+					console.log('isEmpty', parent.isEmpty)
 					if ( parent.is( 'codeBlock' ) && parent.isEmpty ) {
 						// Something got removed and now blockQuote is empty. Remove the blockQuote as well.
+						console.log('parent.isEmpty remove')
 						writer.remove( parent );
 
 						return true;
 					}
+					// if ( parent.is( 'codeBlock' ) && !parent.isEmpty ) {
+					// 	console.log(1111)
+					// 	return true;
+					// }
 				}
 			}
 

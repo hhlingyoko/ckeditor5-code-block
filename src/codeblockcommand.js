@@ -31,6 +31,7 @@ export default class CodeBlockCommand extends Command {
 	refresh() {
 		this.value = this._getValue();
 		this.isEnabled = this._checkEnabled();
+		console.log(this.isEnabled,'this.isEnabled')
 	}
 
 	/**
@@ -69,7 +70,7 @@ export default class CodeBlockCommand extends Command {
 	 */
 	_getValue() {
 		const firstBlock = first( this.editor.model.document.selection.getSelectedBlocks() );
-
+		console.log(firstBlock,'firstBlock')
 		// In the current implementation, the block quote must be an immediate parent of a block element.
 		return !!( firstBlock && findQuote( firstBlock ) );
 	}
@@ -109,18 +110,25 @@ export default class CodeBlockCommand extends Command {
 	 * @param {Array.<module:engine/model/element~Element>} blocks
 	 */
 	_removeQuote( writer, blocks ) {
+		console.log(1111111)
 		// Unquote all groups of block. Iterate in the reverse order to not break following ranges.
 		getRangesOfBlockGroups( writer, blocks ).reverse().forEach( groupRange => {
+			console.log(groupRange,'groupRange')
+			console.log(groupRange.start.isAtStart,'groupRange.start.isAtStart')
 			if ( groupRange.start.isAtStart && groupRange.end.isAtEnd ) {
+				// writer.unwrap( groupRange.start.parent );
+				console.log(groupRange.start.parent,'groupRange.start.parent')
+				console.log(groupRange.end,'groupRange.end')
 				writer.unwrap( groupRange.start.parent );
-
+				console.log(groupRange.start.parent,'groupRange.start.parent1')
+				console.log(groupRange.end,'groupRange.end2')
 				return;
 			}
 
 			// The group of blocks are at the beginning of an <bQ> so let's move them left (out of the <bQ>).
 			if ( groupRange.start.isAtStart ) {
 				const positionBefore = writer.createPositionBefore( groupRange.start.parent );
-
+				console.log(positionBefore,'positionBefore')
 				writer.move( groupRange, positionBefore );
 
 				return;
@@ -128,6 +136,8 @@ export default class CodeBlockCommand extends Command {
 
 			// The blocks are in the middle of an <bQ> so we need to split the <bQ> after the last block
 			// so we move the items there.
+			console.log(groupRange.end.isAtEnd)
+
 			if ( !groupRange.end.isAtEnd ) {
 				writer.split( groupRange.end );
 			}
@@ -135,7 +145,7 @@ export default class CodeBlockCommand extends Command {
 			// Now we are sure that groupRange.end.isAtEnd is true, so let's move the blocks right.
 
 			const positionAfter = writer.createPositionAfter( groupRange.end.parent );
-
+			console.log(positionAfter,'----------------positionAfter')
 			writer.move( groupRange, positionAfter );
 		} );
 	}
@@ -153,16 +163,16 @@ export default class CodeBlockCommand extends Command {
 		// Quote all groups of block. Iterate in the reverse order to not break following ranges.
 		getRangesOfBlockGroups( writer, blocks ).reverse().forEach( groupRange => {
 			let quote = findQuote( groupRange.start );
-
 			if ( !quote ) {
 				const codeBlock =  writer.createElement( 'codeBlock' );
 				const codeBlockInner =  writer.createElement( 'codeBlockInner' );
-				quote = writer.createElement( 'codeBlock' );
-				quote = writer.createElement( 'codeBlockInner' );
 
-				writer.wrap( groupRange, quote );
+				writer.wrap( groupRange, codeBlockInner);
+				writer.wrap( groupRange,  codeBlock);
+				quote  = codeBlock;
+				quotesToMerge.push(codeBlockInner)
 			}
-
+			console.log(quote,'--->quote')
 			quotesToMerge.push( quote );
 		} );
 
@@ -173,17 +183,19 @@ export default class CodeBlockCommand extends Command {
 		quotesToMerge.reverse().reduce( ( currentQuote, nextQuote ) => {
 			if ( currentQuote.nextSibling == nextQuote ) {
 				writer.merge( writer.createPositionAfter( currentQuote ) );
+				console.log(currentQuote,'currentQuote')
 
 				return currentQuote;
-			}
 
+			}
+			console.log(nextQuote,'nextQuote')
 			return nextQuote;
 		} );
 	}
 }
 
 function findQuote( elementOrPosition ) {
-	return elementOrPosition.parent.name == 'codeBlock' ? elementOrPosition.parent : null;
+	return elementOrPosition.parent.name == 'codeBlock'||elementOrPosition.parent.name == 'codeBlockInner'  ? elementOrPosition.parent : null;
 }
 
 // Returns a minimal array of ranges containing groups of subsequent blocks.
